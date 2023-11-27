@@ -14,13 +14,12 @@ CREATE TABLE `instructors` (
 
 -- courses table
 -- each row defines a specific course that uses this system
-CREATE TABLE `courses` ( -- was course
+CREATE TABLE `courses` (
  `id` int(11) NOT NULL AUTO_INCREMENT,
  `code` text NOT NULL,
  `name` text NOT NULL,
  `semester` tinyint NOT NULL,
  `year` year NOT NULL,
- -- removed instructor_id column
  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
@@ -69,6 +68,16 @@ CREATE TABLE `rubrics` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
+-- survey_types TABLE
+-- each row represents a type of survey organization that is used by this system. By requiring that all survey types
+-- be defined in this table, we can ensure that the backend, frontend, and database remain in sync.
+CREATE TABLE `survey_types` (
+  `id` tinyint NOT NULL AUTO_INCREMENT,
+  `description` text NOT NULL,
+  `file_organization` text NOT NULL,
+  `display_multiplier` tinyint NOT NULL,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
 
 -- surveys TABLE
 -- each row represents a use of this system for a course. Students must only be able to submit evaluations between
@@ -80,17 +89,20 @@ CREATE TABLE `surveys` (
  `end_date` datetime NOT NULL,
  `name` VARCHAR(30) NOT NULL,
  `rubric_id` int(11) NOT NULL,
+ `survey_type_id` tinyint NOT NULL,
  PRIMARY KEY (`id`),
  KEY `surveys_course_idx` (`course_id`),
  KEY `surveys_rubric_idx` (`rubric_id`),
  CONSTRAINT `surveys_course_constraint` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
- CONSTRAINT `surveys_rubric_constraint` FOREIGN KEY (`rubric_id`) REFERENCES `rubrics` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+ CONSTRAINT `surveys_rubric_constraint` FOREIGN KEY (`rubric_id`) REFERENCES `rubrics` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+ CONSTRAINT `surveys_survey_type_constraint` FOREIGN KEY (`survey_type_id`) REFERENCES `survey_types` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB;
+
 
 
 -- reviews TABLE
 -- each row represents a set of evaluations that will need to be completed
-CREATE TABLE `reviews` ( -- was reviewers
+CREATE TABLE `reviews` (
  `id` int(11) NOT NULL AUTO_INCREMENT,
  `survey_id` int(11) NOT NULL,
  `reviewer_id` int(11) NOT NULL,
@@ -111,7 +123,7 @@ CREATE TABLE `reviews` ( -- was reviewers
 -- each row defines a single peer- or self-evaluation. Rows are added/updated only as students complete their evaluations
 CREATE TABLE `evals` (
  `id` int(11) NOT NULL AUTO_INCREMENT,
- `review_id` int(11) NOT NULL, -- was reviewers_id
+ `review_id` int(11) NOT NULL,
  PRIMARY KEY (`id`),
  KEY `evals_review_idx` (`review_id`),
  CONSTRAINT `evals_review_constraint` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
@@ -173,7 +185,7 @@ CREATE TABLE `scores` (
 
 -- freeforms TABLE
 -- each row represents the freeform response entered on an evaluation in response to a freeform question
-CREATE TABLE `freeforms` (  -- was freeform
+CREATE TABLE `freeforms` (
  `eval_id` int(11) NOT NULL,
  `topic_id` int(11) NOT NULL,
  `response` TEXT DEFAULT NULL,
